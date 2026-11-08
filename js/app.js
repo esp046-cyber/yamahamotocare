@@ -9,21 +9,25 @@ const esc = t => String(t ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '
 /* =========================================================================
    1. MASTER DICTIONARY RE-INDEXING (Yamaha + Honda Hybrid Engine)
    ========================================================================= */
-// Guarantee LIST exists and merge HONDA_LIST if loaded in separate scripts
-if (typeof LIST === 'undefined') window.LIST = [];
+// Guarantee LIST exists and safely merge HONDA_LIST without duplication
+window.LIST = window.LIST || [];
 if (typeof HONDA_LIST !== 'undefined' && Array.isArray(HONDA_LIST)) {
   HONDA_LIST.forEach(m => {
-    if (!LIST.some(existing => existing.id === m.id)) {
-      LIST.push(m);
+    if (!window.LIST.some(existing => existing.id === m.id)) {
+      window.LIST.push(m);
     }
   });
 }
 
-// Re-generate master key-value dictionary DB indexing every platform across all brands
-let DB = Object.fromEntries(LIST.map(m => [m.id, m]));
+// Safely mutate or create DB without throwing 'Identifier already declared'
+if (typeof DB !== 'undefined') {
+  Object.assign(DB, Object.fromEntries(window.LIST.map(m => [m.id, m])));
+} else {
+  window.DB = Object.fromEntries(window.LIST.map(m => [m.id, m]));
+}
 
 // Helper to deduce brand from model profile
-const getBrand = m => m.brand || (/honda/i.test(m.id) || /beat|click|pcx|adv|xrm|winner|cb300|rebel|crf/i.test(m.id) ? 'Honda' : 'Yamaha');
+const getBrand = m => m ? (m.brand || (/honda/i.test(m.id) || /beat|click|pcx|adv|xrm|winner|cb300|rebel|crf/i.test(m.id) ? 'Honda' : 'Yamaha')) : 'Yamaha';
 
 /* =========================================================================
    2. PERSISTENCE & STORAGE
@@ -52,9 +56,9 @@ function theme() {
    4. PRECISION WEAR DIAGNOSTICS & TELEMETRY
    ========================================================================= */
 function assemblies(m, severe) {
-  const brand = getBrand(m);
-  const o = m.s1_engine_oil;
-  const f = m.s2_filtration;
+  if (!m) return [];
+  const o = m.s1_engine_oil || { interval_km: 3000, grade: '10W-40', drain_ml: 800 };
+  const f = m.s2_filtration || { type: 'mesh', part_no: null };
   const paper = /cartridge|paper/i.test(f.type);
   
   // Apply manufacturer specific severe mileage limits (Metro Manila severe spec)
@@ -98,14 +102,15 @@ function assemblies(m, severe) {
   }
 
   // Spark Plug
-  const plugCode = m.s4_spark_plug.ygp || m.s4_spark_plug.ngk;
-  a.push({
-    k: 'plug',
-    n: 'Spark plug',
-    km: m.s4_spark_plug.interval_km || 8000,
-    d: 365,
-    pn: `${m.s4_spark_plug.ngk} (${m.s4_spark_plug.torque_nm} Nm)`
-  });
+  if (m.s4_spark_plug) {
+    a.push({
+      k: 'plug',
+      n: 'Spark plug',
+      km: m.s4_spark_plug.interval_km || 8000,
+      d: 365,
+      pn: `${m.s4_spark_plug.ngk} (${m.s4_spark_plug.torque_nm} Nm)`
+    });
+  }
 
   // Liquid Cooling Subsystem
   if (m.s13_cooling && m.s13_cooling.liquid_cooled) {
@@ -120,16 +125,18 @@ function assemblies(m, severe) {
 
   // Hydraulic Brake Fluid & Friction Media
   const frontPads = m.s11_front_brake ? (m.s11_front_brake.pads || m.s11_front_brake.part_no || 'Brake Pads') : 'Standard Shoe';
+  const tires = m.s18_tires ? `${m.s18_tires.front} / ${m.s18_tires.rear}` : 'OEM Spec Tires';
   a.push(
     { k: 'bfl', n: 'Brake fluid (bleed/flush)', km: 20000, d: 730, pn: 'DOT 4 Glycol Fluid' },
     { k: 'brk', n: 'Brake friction (pads/shoes)', km: 8000, d: 365, pn: frontPads },
-    { k: 'tire', n: 'Tires (tread depth & PSI)', km: 12000, d: 730, pn: `${m.s18_tires.front} / ${m.s18_tires.rear}` }
+    { k: 'tire', n: 'Tires (tread depth & PSI)', km: 12000, d: 730, pn: tires }
   );
 
   return a;
 }
 
 function diag(b) {
+  if (!b) return [];
   const m = DB[b.model];
   if (!m) return [];
   return assemblies(m, b.severe).map(t => {
@@ -176,7 +183,7 @@ function flat(o, p, out) {
 }
 
 const INDEX = [];
-LIST.forEach(m => Object.keys(SYS).forEach(s => {
+window.LIST.forEach(m => Object.keys(SYS).forEach(s => {
   if (!m[s]) return;
   const out = [];
   flat(m[s], '', out);
@@ -224,7 +231,7 @@ const pills = () => `
   <div class="pills" role="tablist" aria-label="Active Fleet">
     ${S.bikes.map(b => {
       const o = overdue(b);
-      const isAct = String(b.id) === String(act().id);
+      const isAct = String(b.id) === String(act()?.id);
       const m = DB[b.model] || {};
       const brand = getBrand(m);
       return `<button role="tab" aria-selected="${isAct}" class="${isAct ? 'on' : ''}" data-b="${b.id}">
@@ -247,8 +254,23 @@ const empty = t => `
 const V = {
   garage() {
     if (!S.bikes.length) return empty('Add your Yamaha or Honda motorcycle to track maintenance schedules, parts, and factory torques.');
-    const b = act(), m = DB[b.model];
-    if (!m) return empty('Selected motorcycle data could not be resolved. Please re-register.');
+    
+    let b = act();
+    let m = b && DB[b.model];
+    
+    // Graceful recovery if local storage model ID is not found
+    if (!m) {
+      b = S.bikes.find(bike => DB[bike.model]) || null;
+      if (b) {
+        S.active = b.id;
+        m = DB[b.model];
+      } else {
+        S.bikes = [];
+        S.active = null;
+        save();
+        return empty('No registered motorcycles found in database. Please register your bike.');
+      }
+    }
     
     const brand = getBrand(m);
     const brandClass = brand.toLowerCase();
@@ -292,8 +314,8 @@ const V = {
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:0.82rem">
           <div><b>Grade:</b> <span style="color:var(--cyan-glow)">${esc(m.s1_engine_oil.grade)}</span></div>
           <div><b>Drain Cap:</b> ${m.s1_engine_oil.drain_ml} ml</div>
-          <div><b>Spark Plug:</b> ${esc(m.s4_spark_plug.ngk)}</div>
-          <div><b>Final Drive:</b> ${m.s3_final_drive.kind === 'gear_oil' ? m.s3_final_drive.gear_oil_ml + ' ml' : 'Chain Drive'}</div>
+          <div><b>Spark Plug:</b> ${esc(m.s4_spark_plug?.ngk || 'OEM Plug')}</div>
+          <div><b>Final Drive:</b> ${m.s3_final_drive?.kind === 'gear_oil' ? m.s3_final_drive.gear_oil_ml + ' ml' : 'Chain Drive'}</div>
         </div>
       </div>`;
   },
@@ -315,7 +337,7 @@ const V = {
   diag() {
     if (!S.bikes.length) return empty('Add a motorcycle to view live wear telemetry.');
     const b = act();
-    const m = DB[b.model];
+    const m = b && DB[b.model];
     if (!m) return empty('Model data unavailable.');
     
     return pills() + diag(b).map(t => `
@@ -348,9 +370,10 @@ const V = {
 
   torque() {
     if (!S.bikes.length) return empty('Add a motorcycle to view factory torque specifications.');
-    const m = DB[act().model];
+    const b = act();
+    const m = b && DB[b.model];
     if (!m) return empty('Motorcycle not found.');
-    const t = m.torque_nm;
+    const t = m.torque_nm || {};
     const brand = getBrand(m);
 
     return pills() + `
@@ -394,7 +417,7 @@ const V = {
       </div>
       <div class="card">
         <h2>Fleet Information</h2>
-        <p class="mut">Database loaded: <b>${LIST.length} total models</b> (${LIST.filter(m => getBrand(m) === 'Yamaha').length} Yamaha, ${LIST.filter(m => getBrand(m) === 'Honda').length} Honda).</p>
+        <p class="mut">Database loaded: <b>${window.LIST.length} total models</b> (${window.LIST.filter(m => getBrand(m) === 'Yamaha').length} Yamaha, ${window.LIST.filter(m => getBrand(m) === 'Honda').length} Honda).</p>
       </div>`;
   }
 };
@@ -417,19 +440,27 @@ function render(v) {
     ['settings', 'Settings']
   ];
 
-  n.innerHTML = items.map(x => `
-    <button data-v="${x[0]}" class="${x[0] === view ? 'on' : ''}">
-      <span>${x[1]}</span>
-      ${x[0] === 'diag' && totalOverdue ? `<span class="badge">${totalOverdue}</span>` : ''}
-    </button>`).join('');
+  if (n) {
+    n.innerHTML = items.map(x => `
+      <button data-v="${x[0]}" class="${x[0] === view ? 'on' : ''}">
+        <span>${x[1]}</span>
+        ${x[0] === 'diag' && totalOverdue ? `<span class="badge">${totalOverdue}</span>` : ''}
+      </button>`).join('');
 
-  n.querySelectorAll('button').forEach(b => b.onclick = () => render(b.dataset.v));
-  $('#view').innerHTML = V[view]();
+    n.querySelectorAll('button').forEach(b => b.onclick = () => render(b.dataset.v));
+  }
+  
+  const viewContainer = $('#view');
+  if (viewContainer) {
+    viewContainer.innerHTML = V[view]();
+  }
   bind();
 }
 
 function bind() {
-  const m = $('#view'), b = S.bikes.length && act();
+  const m = $('#view');
+  if (!m) return;
+  const b = S.bikes.length && act();
 
   // Active bike pill selector
   m.querySelectorAll('[data-b]').forEach(e => e.onclick = () => {
@@ -441,46 +472,59 @@ function bind() {
   // Open Add Bike Modal dialog with Brand Optgroups
   const a = m.querySelector('#add');
   if (a) a.onclick = () => {
-    const yamahaModels = LIST.filter(x => getBrand(x) === 'Yamaha');
-    const hondaModels = LIST.filter(x => getBrand(x) === 'Honda');
+    const yamahaModels = window.LIST.filter(x => getBrand(x) === 'Yamaha');
+    const hondaModels = window.LIST.filter(x => getBrand(x) === 'Honda');
 
-    $('#dm').innerHTML = `
-      <optgroup label="Yamaha Motor Philippines">
-        ${yamahaModels.map(x => `<option value="${x.id}">${esc(x.name)}</option>`).join('')}
-      </optgroup>
-      <optgroup label="Honda Philippines">
-        ${hondaModels.map(x => `<option value="${x.id}">${esc(x.name)}</option>`).join('')}
-      </optgroup>`;
+    const dm = $('#dm');
+    if (dm) {
+      dm.innerHTML = `
+        <optgroup label="Yamaha Motor Philippines">
+          ${yamahaModels.map(x => `<option value="${x.id}">${esc(x.name)}</option>`).join('')}
+        </optgroup>
+        <optgroup label="Honda Philippines">
+          ${hondaModels.map(x => `<option value="${x.id}">${esc(x.name)}</option>`).join('')}
+        </optgroup>`;
+    }
     
-    $('#dn').value = '';
-    $('#do').value = 0;
-    $('#dlg').showModal();
+    if ($('#dn')) $('#dn').value = '';
+    if ($('#do')) $('#do').value = 0;
+    const dlg = $('#dlg');
+    if (dlg && typeof dlg.showModal === 'function') dlg.showModal();
   };
 
   // Garage view actions
   if (view === 'garage' && b) {
-    $('#sa').onclick = () => {
-      b.odo = Math.max(0, +$('#od').value || 0);
-      b.severe = $('#sv').checked;
-      save();
-      render();
-    };
-    $('#rm').onclick = () => {
-      const bikeName = b.nick || (DB[b.model] && DB[b.model].name) || 'Bike';
-      if (confirm(`Remove ${bikeName} and its maintenance telemetry from your garage?`)) {
-        S.bikes = S.bikes.filter(x => x !== b);
-        S.active = S.bikes[0] ? S.bikes[0].id : null;
+    const sa = $('#sa');
+    if (sa) {
+      sa.onclick = () => {
+        b.odo = Math.max(0, +$('#od').value || 0);
+        b.severe = $('#sv').checked;
         save();
         render();
-      }
-    };
+      };
+    }
+    const rm = $('#rm');
+    if (rm) {
+      rm.onclick = () => {
+        const bikeName = b.nick || (DB[b.model] && DB[b.model].name) || 'Bike';
+        if (confirm(`Remove ${bikeName} and its maintenance telemetry from your garage?`)) {
+          S.bikes = S.bikes.filter(x => x !== b);
+          S.active = S.bikes[0] ? S.bikes[0].id : null;
+          save();
+          render();
+        }
+      };
+    }
   }
 
   // Parts search & brand filtering
   if (view === 'search') {
-    $('#q').oninput = e => {
-      $('#res').innerHTML = search(e.target.value, searchFilter);
-    };
+    const q = $('#q');
+    if (q) {
+      q.oninput = e => {
+        $('#res').innerHTML = search(e.target.value, searchFilter);
+      };
+    }
     m.querySelectorAll('[data-filter]').forEach(btn => {
       btn.onclick = () => {
         searchFilter = btn.dataset.filter;
@@ -505,66 +549,88 @@ function bind() {
         return;
       }
       const t = diag(b).find(x => x.k === e.dataset.ics);
-      const estDays = Math.max(1, Math.min(t.dl > 0 ? t.dl : 1, t.kl > 0 ? Math.round(t.kl / 20) : 1));
-      Notif.ics(b, t, new Date(Date.now() + estDays * 864e5));
+      if (t) {
+        const estDays = Math.max(1, Math.min(t.dl > 0 ? t.dl : 1, t.kl > 0 ? Math.round(t.kl / 20) : 1));
+        Notif.ics(b, t, new Date(Date.now() + estDays * 864e5));
+      }
     });
   }
 
   // Settings view actions
   if (view === 'settings') {
-    $('#ts').onchange = e => { S.theme = e.target.value; save(); theme(); };
-    $('#ex').onclick = () => {
-      const l = document.createElement('a');
-      l.href = URL.createObjectURL(new Blob([JSON.stringify(S, null, 2)], { type: 'application/json' }));
-      l.download = `motocare-garage-backup-${new Date().toISOString().slice(0, 10)}.json`;
-      l.click();
-    };
-    $('#im').onclick = () => $('#fi').click();
-    $('#fi').onchange = async e => {
-      try {
-        const d = JSON.parse(await e.target.files[0].text());
-        if (!Array.isArray(d.bikes)) throw 0;
-        S = d;
-        save();
-        theme();
-        render('garage');
-      } catch (x) {
-        alert('Invalid MotoCare PH backup file.');
-      }
-    };
+    const ts = $('#ts');
+    if (ts) ts.onchange = e => { S.theme = e.target.value; save(); theme(); };
+    const ex = $('#ex');
+    if (ex) {
+      ex.onclick = () => {
+        const l = document.createElement('a');
+        l.href = URL.createObjectURL(new Blob([JSON.stringify(S, null, 2)], { type: 'application/json' }));
+        l.download = `motocare-garage-backup-${new Date().toISOString().slice(0, 10)}.json`;
+        l.click();
+      };
+    }
+    const im = $('#im');
+    if (im) im.onclick = () => $('#fi').click();
+    const fi = $('#fi');
+    if (fi) {
+      fi.onchange = async e => {
+        try {
+          const d = JSON.parse(await e.target.files[0].text());
+          if (!Array.isArray(d.bikes)) throw 0;
+          S = d;
+          save();
+          theme();
+          render('garage');
+        } catch (x) {
+          alert('Invalid MotoCare PH backup file.');
+        }
+      };
+    }
   }
 }
 
 /* =========================================================================
    8. GLOBAL LISTENERS & DIALOG CONTROLS
    ========================================================================= */
-$('#da').onclick = () => {
-  const o = Math.max(0, +$('#do').value || 0);
-  const selectedModel = $('#dm').value;
-  const b = {
-    id: String(Date.now()),
-    model: selectedModel,
-    nick: $('#dn').value.trim(),
-    odo: o,
-    start_odo: o,
-    start: new Date().toISOString(),
-    severe: true,
-    last: {}
+const da = $('#da');
+if (da) {
+  da.onclick = () => {
+    const o = Math.max(0, +$('#do').value || 0);
+    const selectedModel = $('#dm').value;
+    const b = {
+      id: String(Date.now()),
+      model: selectedModel,
+      nick: ($('#dn').value || '').trim(),
+      odo: o,
+      start_odo: o,
+      start: new Date().toISOString(),
+      severe: true,
+      last: {}
+    };
+    S.bikes.push(b);
+    S.active = b.id;
+    save();
+    const dlg = $('#dlg');
+    if (dlg) dlg.close();
+    render('garage');
   };
-  S.bikes.push(b);
-  S.active = b.id;
-  save();
-  $('#dlg').close();
-  render('garage');
+}
+
+const dc = $('#dc');
+if (dc) dc.onclick = () => {
+  const dlg = $('#dlg');
+  if (dlg) dlg.close();
 };
 
-$('#dc').onclick = () => $('#dlg').close();
-$('#th').onclick = () => {
-  S.theme = { auto: 'light', light: 'dark', dark: 'auto' }[S.theme] || 'auto';
-  save();
-  theme();
-  if (view === 'settings') render();
-};
+const th = $('#th');
+if (th) {
+  th.onclick = () => {
+    S.theme = { auto: 'light', light: 'dark', dark: 'auto' }[S.theme] || 'auto';
+    save();
+    theme();
+    if (view === 'settings') render();
+  };
+}
 
 // Initial bootstrap
 theme();
