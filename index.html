@@ -1,14 +1,13 @@
 <!doctype html>
-<html lang="en" data-app-version="2026.4.0">
+<html lang="en" data-app-version="2026.5.0">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=5">
   <title>MotoCare PH — Precision Motorcycle Telemetry &amp; Garage OS</title>
-  <meta name="description" content="Next-generation offline maintenance diagnostics, factory torque telemetry, and authentic OEM parts catalog for Yamaha and Honda riders in the Philippines.">
+  <meta name="description" content="Next-gen offline maintenance diagnostics, torque telemetry, and authentic OEM parts catalog for Yamaha and Honda riders in the Philippines.">
   <meta name="theme-color" content="#060B19" media="(prefers-color-scheme: dark)">
-  <meta name="theme-color" content="#F4F7FC" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#F1F5F9" media="(prefers-color-scheme: light)">
 
-  <!-- Progressive Web App Capabilities -->
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icons/favicon.ico" sizes="any">
   <link rel="icon" href="icons/favicon.svg" type="image/svg+xml">
@@ -16,22 +15,18 @@
   <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 
-  <!-- OpenGraph & Social Cards -->
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="MotoCare PH">
   <meta property="og:title" content="MotoCare PH — Yamaha &amp; Honda Telemetry &amp; Torque Suite">
   <meta property="og:description" content="Authentic service specifications, parts catalog cross-references, and factory torque specs for Philippine scooters, underbones, and sport bikes.">
   <meta property="og:image" content="icons/og-image.png">
-  <meta name="twitter:card" content="summary_large_image">
 
-  <!-- Apple Standalone Web App Meta -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="MotoCare PH">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="format-detection" content="telephone=no">
 
-  <!-- Instant Pre-Paint Theme Bootstrap (Prevents White Flash in Dark Mode) -->
   <script>
     (function(){
       try {
@@ -47,31 +42,23 @@
     })();
   </script>
 
-  <!-- External Stylesheet Engine -->
+  <!-- External Clean Stylesheet -->
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
 
-  <!-- Cyber Telemetry App Header -->
   <header>
-    <a href="#garage" class="brand-cluster" aria-label="MotoCare PH Garage Home">
+    <a href="#garage" class="brand-cluster" aria-label="MotoCare PH Home">
       <svg class="brand-icon" viewBox="0 0 64 64" aria-hidden="true">
         <defs>
           <linearGradient id="headerCyanGrad" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stop-color="#00E5FF"/>
-            <stop offset="50%" stop-color="#0099FF"/>
-            <stop offset="100%" stop-color="#0044CC"/>
+            <stop offset="100%" stop-color="#0066FF"/>
           </linearGradient>
-          <filter id="neonGlow" x="-20%" y="-20%" width="140%" height="140%">
-            <feGaussianBlur stdDeviation="3" result="blur"/>
-            <feComposite in="SourceGraphic" in2="blur" operator="over"/>
-          </filter>
         </defs>
-        <circle cx="32" cy="32" r="29" fill="rgba(0, 229, 255, 0.05)" stroke="url(#headerCyanGrad)" stroke-width="2.5" filter="url(#neonGlow)"/>
-        <path d="M32 52V32M18 16v11a14 14 0 0 0 28 0V16" fill="none" stroke="url(#headerCyanGrad)" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
-        <circle cx="32" cy="32" r="4.2" fill="#00E5FF"/>
-        <circle cx="18" cy="16" r="2.5" fill="#00E5FF"/>
-        <circle cx="46" cy="16" r="2.5" fill="#00E5FF"/>
+        <circle cx="32" cy="32" r="28" fill="rgba(0, 229, 255, 0.06)" stroke="url(#headerCyanGrad)" stroke-width="2.5"/>
+        <path d="M32 50V32M20 18v10a12 12 0 0 0 24 0V18" fill="none" stroke="url(#headerCyanGrad)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="32" cy="32" r="4" fill="#00E5FF"/>
       </svg>
       <div class="brand-titles">
         <h1>MotoCare PH <span class="brand-tag">2026 Fleet</span></h1>
@@ -79,59 +66,46 @@
     </a>
     
     <div class="header-actions">
-      <button id="th" class="hud-btn" aria-label="Toggle theme mode">Theme: auto</button>
+      <button id="th" class="hud-btn" aria-label="Toggle theme">Theme: auto</button>
     </div>
   </header>
 
-  <!-- Dynamic Views Injector (Garage, Parts Search, Wear Diagnostics, Torques, Settings) -->
-  <main id="view" tabindex="-1" role="region" aria-live="polite">
-    <!-- Initial Loading Skeleton (Replaced immediately on DOMContentLoaded) -->
-    <div style="padding: 24px 0; text-align: center;">
-      <div style="display: inline-block; width: 32px; height: 32px; border: 3px solid rgba(0, 229, 255, 0.2); border-top-color: #00E5FF; border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
-      <p style="margin-top: 14px; font-size: 0.85rem; color: #8E9DB8; letter-spacing: 0.04em;">LOADING MOTOCARE TELEMETRY...</p>
-    </div>
-  </main>
+  <main id="view" tabindex="-1" role="region" aria-live="polite"></main>
 
-  <!-- Persistent 2026 Bottom HUD Navigation Bar -->
   <nav aria-label="Primary Navigation">
     <div class="nav-inner"></div>
   </nav>
 
-  <!-- Add Motorcycle Modal Dialog -->
   <dialog id="dlg" aria-labelledby="dt">
     <h2 id="dt">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <path d="M12 5v14M5 12h14"/>
       </svg>
-      Register Motorcycle
+      Add Motorcycle
     </h2>
     
     <label for="dm">Manufacturer &amp; Model Line</label>
     <select id="dm" required></select>
 
-    <label for="dn">Nickname / Plate Identification (Optional)</label>
-    <input id="dn" type="text" maxlength="30" placeholder="e.g. Daily Commuter, Project NMAX">
+    <label for="dn">Nickname / Plate (Optional)</label>
+    <input id="dn" type="text" maxlength="30" placeholder="e.g. Daily Commuter, Project X">
 
-    <label for="do">Starting Odometer (km)</label>
+    <label for="do">Current Odometer (km)</label>
     <input id="do" type="number" inputmode="numeric" min="0" value="0">
 
     <div class="modal-actions">
       <button id="dc" type="button" class="hud-btn">Cancel</button>
-      <button id="da" type="button" class="pri">Add to Garage</button>
+      <button id="da" type="button" class="pri">Register Bike</button>
     </div>
   </dialog>
 
-  <!-- Accessible Fallback -->
   <noscript>
-    <div style="max-width:540px;margin:40px auto;padding:24px;border-radius:16px;background:#101B33;color:#F8FAFC;text-align:center;border:1px solid rgba(255,255,255,0.1);">
-      <h2 style="margin-bottom:12px;font-size:1.3rem;">JavaScript Required</h2>
-      <p style="color:#8E9DB8;line-height:1.6;font-size:0.95rem;">
-        MotoCare PH requires JavaScript to execute real-time wear calculations, offline PWA caching, and torque lookup tables. Please enable JavaScript or open <a href="offline.html" style="color:#00E5FF;text-decoration:underline;">the static offline spec table</a>.
-      </p>
+    <div style="max-width:500px;margin:40px auto;padding:24px;border-radius:16px;background:#101B33;color:#F8FAFC;text-align:center;">
+      <h2>JavaScript Required</h2>
+      <p style="color:#8E9DB8;margin-top:8px;">MotoCare PH requires JavaScript. Please enable it in Safari.</p>
     </div>
   </noscript>
 
-  <!-- Sequential Script Execution Pipeline -->
   <script src="js/db.js"></script>
   <script src="js/db_honda.js"></script>
   <script src="js/notifications.js"></script>
