@@ -1,0 +1,19 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Yamaha MotoCare PH</title><meta name="description" content="Maintenance, parts and torque reference for Yamaha riders in the Philippines. Works offline.">
+<meta name="theme-color" content="#002B7F"><link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/favicon.ico" sizes="any"><link rel="icon" href="icons/favicon.svg" type="image/svg+xml"><link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png"><link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png"><link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta property="og:type" content="website"><meta property="og:title" content="Yamaha MotoCare PH"><meta property="og:description" content="Maintenance, parts and torque reference for Yamaha riders in the Philippines."><meta property="og:image" content="icons/og-image.png">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="MotoCare"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<script>try{var t=JSON.parse(localStorage.getItem('motocare.v3')).theme;if(t&&t!=='auto')document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="stylesheet" href="css/styles.css"></head><body>
+<header><h1><svg viewBox="0 0 64 64" aria-hidden="true"><g fill="none" stroke="#00E5FF" stroke-width="5" stroke-linecap="round"><path d="M32 56V34M16 8v14a16 16 0 0 0 32 0V8"/></g></svg>MotoCare PH</h1><button id="th" aria-label="Change theme">Theme</button></header>
+<main id="view" tabindex="-1"></main>
+<nav aria-label="Main"></nav>
+<dialog id="dlg" aria-labelledby="dt"><h2 id="dt">Add a bike</h2>
+<label for="dm">Model</label><select id="dm"></select>
+<label for="dn">Nickname (optional)</label><input id="dn" type="text" maxlength="30">
+<label for="do">Odometer (km)</label><input id="do" type="number" inputmode="numeric" min="0" value="0">
+<div class="row"><button id="dc">Cancel</button><button id="da" class="pri">Add bike</button></div></dialog>
+<noscript><p style="padding:16px">MotoCare needs JavaScript. For specs without it, open <a href="offline.html" style="color:#00E5FF">the offline spec table</a>.</p></noscript>
+<script src="js/db.js"></script><script src="js/notifications.js"></script><script src="js/app.js"></script></body></html>
