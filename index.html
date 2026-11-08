@@ -1,19 +1,479 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Yamaha MotoCare PH</title><meta name="description" content="Maintenance, parts and torque reference for Yamaha riders in the Philippines. Works offline.">
-<meta name="theme-color" content="#002B7F"><link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" href="icons/favicon.ico" sizes="any"><link rel="icon" href="icons/favicon.svg" type="image/svg+xml"><link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png"><link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png"><link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-<meta property="og:type" content="website"><meta property="og:title" content="Yamaha MotoCare PH"><meta property="og:description" content="Maintenance, parts and torque reference for Yamaha riders in the Philippines."><meta property="og:image" content="icons/og-image.png">
-<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="MotoCare"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<script>try{var t=JSON.parse(localStorage.getItem('motocare.v3')).theme;if(t&&t!=='auto')document.documentElement.dataset.theme=t}catch(e){}</script>
-<link rel="stylesheet" href="css/styles.css"></head><body>
-<header><h1><svg viewBox="0 0 64 64" aria-hidden="true"><g fill="none" stroke="#00E5FF" stroke-width="5" stroke-linecap="round"><path d="M32 56V34M16 8v14a16 16 0 0 0 32 0V8"/></g></svg>MotoCare PH</h1><button id="th" aria-label="Change theme">Theme</button></header>
-<main id="view" tabindex="-1"></main>
-<nav aria-label="Main"></nav>
-<dialog id="dlg" aria-labelledby="dt"><h2 id="dt">Add a bike</h2>
-<label for="dm">Model</label><select id="dm"></select>
-<label for="dn">Nickname (optional)</label><input id="dn" type="text" maxlength="30">
-<label for="do">Odometer (km)</label><input id="do" type="number" inputmode="numeric" min="0" value="0">
-<div class="row"><button id="dc">Cancel</button><button id="da" class="pri">Add bike</button></div></dialog>
-<noscript><p style="padding:16px">MotoCare needs JavaScript. For specs without it, open <a href="offline.html" style="color:#00E5FF">the offline spec table</a>.</p></noscript>
-<script src="js/db.js"></script><script src="js/notifications.js"></script><script src="js/app.js"></script></body></html>
+<!doctype html>
+<html lang="en" data-app-version="2026.3.0">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=5">
+  <title>MotoCare PH — Precision Motorcycle Garage (Yamaha &amp; Honda PH)</title>
+  <meta name="description" content="Next-gen offline maintenance diagnostics, torque telemetry, and authentic OEM parts catalog for Yamaha and Honda riders across the Philippines.">
+  <meta name="theme-color" content="#060B19" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#F4F7FC" media="(prefers-color-scheme: light)">
+
+  <!-- PWA & Mobile Web Capabilities -->
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/favicon.ico" sizes="any">
+  <link rel="icon" href="icons/favicon.svg" type="image/svg+xml">
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+
+  <!-- OpenGraph & Social Metadata -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="MotoCare PH">
+  <meta property="og:title" content="MotoCare PH — Yamaha &amp; Honda Diagnostic &amp; Torque Suite">
+  <meta property="og:description" content="Factory service specs, genuine parts cross-references, and torque specs for Yamaha &amp; Honda motorcycles in the Philippines. Fully offline.">
+  <meta property="og:image" content="icons/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+
+  <!-- Apple & Standalone PWA Directives -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="MotoCare PH">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="format-detection" content="telephone=no">
+
+  <!-- Instant Theme & Storage Bootstrap -->
+  <script>
+    (function(){
+      try {
+        var s = JSON.parse(localStorage.getItem('motocare.v3'));
+        var t = s && s.theme;
+        if (t && t !== 'auto') {
+          document.documentElement.dataset.theme = t;
+        } else {
+          var dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+        }
+      } catch(e){}
+    })();
+  </script>
+
+  <!-- External Stylesheet Fallback -->
+  <link rel="stylesheet" href="css/styles.css">
+
+  <!-- Modern Inlined Visual Engine & Cyber-Aesthetic Design Tokens -->
+  <style>
+    :root {
+      --font-stack: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      --font-mono: "SF Mono", "JetBrains Mono", Consolas, "Liberation Mono", Menlo, monospace;
+      
+      --bg-base: #060B19;
+      --bg-surface: rgba(15, 23, 42, 0.78);
+      --bg-surface-elevated: rgba(30, 41, 59, 0.85);
+      --bg-card: rgba(18, 27, 49, 0.75);
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-focus: rgba(0, 229, 255, 0.5);
+      
+      --text-main: #F8FAFC;
+      --text-muted: #94A3B8;
+      --text-dim: #64748B;
+      
+      --cyan-glow: #00E5FF;
+      --yamaha-blue: #0033A0;
+      --honda-red: #E4002B;
+      --ok-green: #10B981;
+      --warn-amber: #F59E0B;
+      --bad-crimson: #EF4444;
+      
+      --glass-blur: blur(24px) saturate(180%);
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --radius-pill: 9999px;
+      
+      --shadow-hud: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    [data-theme="light"] {
+      --bg-base: #F1F5F9;
+      --bg-surface: rgba(255, 255, 255, 0.82);
+      --bg-surface-elevated: rgba(241, 245, 249, 0.9);
+      --bg-card: rgba(255, 255, 255, 0.85);
+      --border-subtle: rgba(0, 0, 0, 0.08);
+      --border-focus: rgba(0, 102, 204, 0.5);
+      
+      --text-main: #0F172A;
+      --text-muted: #475569;
+      --text-dim: #94A3B8;
+      
+      --shadow-hud: 0 8px 32px 0 rgba(0, 43, 127, 0.08);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    html, body {
+      min-height: 100vh;
+      min-height: 100dvh;
+      font-family: var(--font-stack);
+      background-color: var(--bg-base);
+      color: var(--text-main);
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* Ambient Backdrop */
+    body::before {
+      content: "";
+      position: fixed;
+      top: -20vh;
+      left: -20vw;
+      width: 140vw;
+      height: 60vh;
+      background: radial-gradient(circle at 30% 20%, rgba(0, 229, 255, 0.12) 0%, rgba(0, 51, 160, 0.08) 35%, transparent 70%),
+                  radial-gradient(circle at 75% 25%, rgba(228, 0, 43, 0.08) 0%, transparent 60%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: calc(var(--safe-top) + 12px) 18px 12px 18px;
+      background: var(--bg-surface);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .brand-cluster {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .brand-icon {
+      width: 38px;
+      height: 38px;
+      filter: drop-shadow(0 0 10px rgba(0, 229, 255, 0.4));
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .brand-cluster:hover .brand-icon {
+      transform: scale(1.08) rotate(-4deg);
+    }
+
+    .brand-titles h1 {
+      font-size: 1.15rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .brand-tag {
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 2px 6px;
+      border-radius: var(--radius-pill);
+      background: linear-gradient(135deg, rgba(0, 229, 255, 0.2), rgba(0, 51, 160, 0.3));
+      border: 1px solid rgba(0, 229, 255, 0.3);
+      color: var(--cyan-glow);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .hud-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      border-radius: var(--radius-pill);
+      border: 1px solid var(--border-subtle);
+      background: var(--bg-surface-elevated);
+      color: var(--text-main);
+      cursor: pointer;
+      backdrop-filter: blur(8px);
+      transition: all 0.2s ease;
+    }
+
+    .hud-btn:hover {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 12px rgba(0, 229, 255, 0.25);
+    }
+
+    main#view {
+      position: relative;
+      z-index: 1;
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 16px 16px calc(var(--safe-bottom) + 84px) 16px;
+      min-height: calc(100vh - 140px);
+    }
+
+    nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 50;
+      display: flex;
+      justify-content: center;
+      padding: 8px 12px calc(var(--safe-bottom) + 8px) 12px;
+      background: var(--bg-surface);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border-top: 1px solid var(--border-subtle);
+    }
+
+    nav .nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      width: 100%;
+      max-width: 520px;
+      background: rgba(10, 16, 31, 0.6);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-pill);
+      padding: 4px;
+    }
+
+    nav button {
+      position: relative;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      padding: 8px 4px;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.74rem;
+      font-weight: 600;
+      cursor: pointer;
+      border-radius: var(--radius-pill);
+      transition: color 0.2s ease, transform 0.15s ease;
+    }
+
+    nav button.on {
+      color: var(--cyan-glow);
+      background: rgba(0, 229, 255, 0.08);
+    }
+
+    nav button:active {
+      transform: scale(0.95);
+    }
+
+    nav .badge {
+      position: absolute;
+      top: 4px;
+      right: calc(50% - 18px);
+      background: var(--bad-crimson);
+      color: #fff;
+      font-size: 0.62rem;
+      font-weight: 800;
+      padding: 1px 5px;
+      border-radius: var(--radius-pill);
+      box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
+    }
+
+    dialog#dlg {
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      background: var(--bg-surface-elevated);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      color: var(--text-main);
+      padding: 24px;
+      max-width: 440px;
+      width: calc(100% - 32px);
+      margin: auto;
+      box-shadow: var(--shadow-hud);
+      animation: modalPop 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    dialog#dlg::backdrop {
+      background: rgba(3, 7, 18, 0.7);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    @keyframes modalPop {
+      from { opacity: 0; transform: scale(0.94) translateY(12px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    dialog#dlg h2 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    dialog#dlg label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin: 12px 0 4px 2px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    dialog#dlg select,
+    dialog#dlg input {
+      width: 100%;
+      padding: 10px 14px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-subtle);
+      background: rgba(15, 23, 42, 0.6);
+      color: var(--text-main);
+      font-size: 0.95rem;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    dialog#dlg select:focus,
+    dialog#dlg input:focus {
+      border-color: var(--cyan-glow);
+      box-shadow: 0 0 12px rgba(0, 229, 255, 0.3);
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 24px;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 18px;
+      margin-bottom: 14px;
+      box-shadow: var(--shadow-hud);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+
+    .card:hover {
+      border-color: rgba(255, 255, 255, 0.14);
+    }
+
+    .row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .row > * { flex: 1; }
+
+    button.pri {
+      background: linear-gradient(135deg, #00B4DB, #0083B0);
+      color: #fff;
+      font-weight: 700;
+      border: none;
+      padding: 10px 16px;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(0, 180, 219, 0.3);
+      transition: transform 0.15s ease, opacity 0.2s ease;
+    }
+
+    button.pri:active { transform: scale(0.97); }
+
+    button.del {
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--bad-crimson);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      font-weight: 600;
+      padding: 10px 16px;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Cyber Header -->
+  <header>
+    <a href="#garage" class="brand-cluster" aria-label="MotoCare PH Home">
+      <svg class="brand-icon" viewBox="0 0 64 64" aria-hidden="true">
+        <defs>
+          <linearGradient id="cyanGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#00E5FF"/>
+            <stop offset="100%" stop-color="#0072FF"/>
+          </linearGradient>
+        </defs>
+        <circle cx="32" cy="32" r="30" fill="rgba(0, 229, 255, 0.06)" stroke="url(#cyanGrad)" stroke-width="2.5"/>
+        <path d="M32 54V32M18 14v12a14 14 0 0 0 28 0V14" fill="none" stroke="url(#cyanGrad)" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="32" cy="32" r="4.5" fill="#00E5FF"/>
+      </svg>
+      <div class="brand-titles">
+        <h1>MotoCare PH <span class="brand-tag">2026 Fleet</span></h1>
+      </div>
+    </a>
+    
+    <div class="header-actions">
+      <button id="th" class="hud-btn" aria-label="Toggle display theme">Theme: auto</button>
+    </div>
+  </header>
+
+  <!-- Dynamic Views -->
+  <main id="view" tabindex="-1" role="region" aria-live="polite"></main>
+
+  <!-- HUD Navigation Bar -->
+  <nav aria-label="Primary Navigation">
+    <div class="nav-inner"></div>
+  </nav>
+
+  <!-- Add Bike Accessible Dialog -->
+  <dialog id="dlg" aria-labelledby="dt">
+    <h2 id="dt">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+      Add Motorcycle to Garage
+    </h2>
+    
+    <label for="dm">Select Brand &amp; Model</label>
+    <select id="dm" required></select>
+
+    <label for="dn">Nickname / Plate / Note (optional)</label>
+    <input id="dn" type="text" maxlength="30" placeholder="e.g. Daily Commuter, Project X">
+
+    <label for="do">Current Odometer (km)</label>
+    <input id="do" type="number" inputmode="numeric" min="0" value="0">
+
+    <div class="modal-actions">
+      <button id="dc" type="button" class="hud-btn">Cancel</button>
+      <button id="da" type="button" class="pri">Register Bike</button>
+    </div>
+  </dialog>
+
+  <!-- Accessible Fallback -->
+  <noscript>
+    <div style="max-width:500px;margin:40px auto;padding:24px;border-radius:16px;background:#1E293B;color:#fff;text-align:center;">
+      <h2 style="margin-bottom:12px;">JavaScript Required</h2>
+      <p style="color:#94A3B8;line-height:1.5;">MotoCare PH utilizes real-time client-side diagnostics and offline storage. Please enable JavaScript or open <a href="offline.html" style="color:#00E5FF;text-decoration:underline;">the static offline spec table</a>.</p>
+    </div>
+  </noscript>
+
+  <!-- SCRIPT PIPELINE: Yamaha Registry -> Honda Registry -> Core Engine -->
+  <script src="js/db.js"></script>
+  <script src="js/db_honda.js"></script>
+  <script src="js/notifications.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
