@@ -1,8 +1,31 @@
-const V='motocare-v3',F=['./','index.html','offline.html','manifest.webmanifest','robots.txt','css/styles.css','js/db.js','js/app.js','js/notifications.js','icons/favicon.ico','icons/favicon.svg','icons/favicon-16x16.png','icons/favicon-32x32.png','icons/apple-touch-icon.png','icons/icon-72.png','icons/icon-96.png','icons/icon-128.png','icons/icon-144.png','icons/icon-152.png','icons/icon-192.png','icons/icon-384.png','icons/icon-512.png','icons/icon-maskable-192.png','icons/icon-maskable-512.png','icons/og-image.png','icons/screenshot-narrow.png','icons/screenshot-wide.png'];
-self.addEventListener('install',e=>{e.waitUntil(caches.open(V).then(c=>Promise.all(F.map(u=>c.add(u).catch(()=>{})))));self.skipWaiting()});
-self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==V).map(x=>caches.delete(x)))).then(()=>self.clients.claim()))});
-self.addEventListener('fetch',e=>{const r=e.request;if(r.method!=='GET'||new URL(r.url).origin!==location.origin)return;
- e.respondWith(caches.match(r,{ignoreSearch:true}).then(hit=>{if(hit){fetch(r).then(n=>{if(n.ok)caches.open(V).then(c=>c.put(r,n))}).catch(()=>{});return hit}
-  return fetch(r).then(n=>{if(n.ok){const c=n.clone();caches.open(V).then(x=>x.put(r,c))}return n}).catch(()=>r.mode==='navigate'?caches.match('offline.html'):Response.error())}))});
-self.addEventListener('push',e=>{let d={};try{d=e.data.json()}catch(x){}e.waitUntil(self.registration.showNotification(d.title||'MotoCare',{body:d.body||'A service is due.',icon:'icons/icon-192.png',badge:'icons/icon-96.png'}))});
-self.addEventListener('notificationclick',e=>{e.notification.close();e.waitUntil(clients.openWindow('./index.html#diag'))});
+const CACHE_NAME = 'motocare-v2026.4';
+const ASSETS = [
+  './',
+  './index.html',
+  './css/styles.css',
+  './js/db.js',
+  './js/db_honda.js',
+  './js/notifications.js',
+  './js/app.js',
+  './manifest.webmanifest'
+];
+
+self.addEventListener('install', e => {
+  e.waitUntil(
+    caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS)).then(() => self.skipWaiting())
+  );
+});
+
+self.addEventListener('activate', e => {
+  e.waitUntil(
+    caches.keys().then(keys => Promise.all(
+      keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))
+    )).then(() => self.clients.claim())
+  );
+});
+
+self.addEventListener('fetch', e => {
+  e.respondWith(
+    caches.match(e.request).then(res => res || fetch(e.request))
+  );
+});
